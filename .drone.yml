@@ -824,3 +824,43 @@ trigger:
 
 depends_on:
 - connection-from-different-network-test
+
+---
+kind: pipeline
+name: just-build-TE-111
+
+environment:
+  SODIUM_USE_PKG_CONFIG: 1
+
+steps:
+  - name: cleanup-node-data
+    image: alpine/git
+    user: root
+    volumes:
+      - name: tezedge-node-data
+        path: /tmp/tezedge_developer
+    commands:
+      - rm -rf /tmp/tezedge_developer/light-node
+      - rm -rf /tmp/tezedge_developer/tezos-node
+
+  - name: tezedge-node-run
+    image: simplestakingcom/tezedge-ci-builder:latest
+    pull: if-not-exists
+    user: root
+    volumes:
+      - name: tezedge-node-data
+        path: /tmp/tezedge_developer
+    environment:
+      SODIUM_USE_PKG_CONFIG: 1
+    commands:
+      - cargo build --release --workspace
+
+volumes:
+  - name: tezedge-node-data
+    host:
+      path: /etc/tezedge-node-tmp
+
+
+trigger:
+  branch:
+    - feature/TE-111
